@@ -36,4 +36,9 @@ export class AirQualityController {
       },
     };
   }
+
+  @Get('/paris-most-polluted-time')
+  async getParisMostPollutedTime() {
+    return await this.airQualityService.getDateTimesWhenParisWasMostPolluted();
+  }
 }
