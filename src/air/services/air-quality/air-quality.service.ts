@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,47 +25,107 @@ export class AirQualityService {
 
     try {
       const response = await axios.get(url);
-
-      console.log(JSON.stringify(response.data));
       return response.data;
     } catch (err) {
-      throw err;
+      this.handleAirQualityApiException(err);
     }
   }
 
   async getDateTimesWhenParisWasMostPolluted() {
-    const maxPollutionQuery = this.cityPollutionDataPointRepository
-      .createQueryBuilder('cityPollutionDataPoints')
-      .select('MAX(cityPollutionDataPoints.pollutionIndex)')
-      .getQuery();
+    try {
+      const maxPollutionQuery = this.cityPollutionDataPointRepository
+        .createQueryBuilder('cityPollutionDataPoints')
+        .select('MAX(cityPollutionDataPoints.pollutionIndex)')
+        .getQuery();
 
-    const maxPollutionEntities = await this.cityPollutionDataPointRepository
-      .createQueryBuilder('cityPollutionDataPoints')
-      .where(`cityPollutionDataPoints.pollutionIndex = (${maxPollutionQuery})`)
-      .getMany();
+      const maxPollutionEntities = await this.cityPollutionDataPointRepository
+        .createQueryBuilder('cityPollutionDataPoints')
+        .where(
+          `cityPollutionDataPoints.pollutionIndex = (${maxPollutionQuery})`,
+        )
+        .getMany();
 
-    return {
-      pollutionIndex: maxPollutionEntities[0].pollutionIndex,
-      dateTimes: maxPollutionEntities.map((entity) => entity.samplingDateTime),
-    };
+      return {
+        pollutionIndex: maxPollutionEntities[0].pollutionIndex,
+        dateTimes: maxPollutionEntities.map(
+          (entity) => entity.samplingDateTime,
+        ),
+      };
+    } catch (err) {
+      this.handleDatabaseException(err, true);
+    }
   }
 
   @Cron('01 * * * * *')
   async getParisPollutionDataPoint() {
-    const parisLat = 48.856613;
-    const parisLng = 2.352222;
+    const parisLatitude = 48.856613;
+    const parisLongitude = 2.352222;
 
-    const response = await this.getNearestCityByCoordinates(parisLat, parisLng);
+    let response = null;
 
-    await this.cityPollutionDataPointRepository.save({
-      samplingDateTime: new Date(),
-      pollutionIndexRecordDateTime: new Date(
+    try {
+      response = await this.getNearestCityByCoordinates(
+        parisLatitude,
+        parisLongitude,
+      );
+    } catch (err) {
+      this.handleAirQualityApiException(err);
+    }
+
+    if (response) {
+      const cityPollutionDataPoint = new CityPollutionDataPoint();
+
+      cityPollutionDataPoint.samplingDateTime = new Date();
+      cityPollutionDataPoint.pollutionIndexRecordDateTime = new Date(
         response?.data?.current?.pollution?.ts,
-      ),
-      city: response?.data?.city,
-      state: response?.data?.state,
-      country: response?.data?.country,
-      pollutionIndex: response?.data?.current?.pollution?.aqius,
-    });
+      );
+      cityPollutionDataPoint.city = response?.data?.city;
+      cityPollutionDataPoint.state = response?.data?.state;
+      cityPollutionDataPoint.country = response?.data?.country;
+      cityPollutionDataPoint.pollutionIndex =
+        response?.data?.current?.pollution?.aqius;
+
+      try {
+        await this.cityPollutionDataPointRepository.save(
+          cityPollutionDataPoint,
+        );
+      } catch (err) {
+        this.handleDatabaseException(err, false);
+      }
+    }
+  }
+
+  private handleDatabaseException(err: any, throwException: boolean) {
+    // Log exception for auditing purposes
+    console.log(err);
+
+    if (throwException) {
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Something went wrong, please contact the administrator.',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          cause: err,
+        },
+      );
+    }
+  }
+
+  private handleAirQualityApiException(err: any) {
+    // Log exception for auditing purposes
+    console.log(err);
+
+    throw new HttpException(
+      {
+        status: err.response?.status,
+        error: err?.response?.data?.data,
+      },
+      err.response?.status,
+      {
+        cause: err?.response,
+      },
+    );
   }
 }
