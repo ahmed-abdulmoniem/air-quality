@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { AirQualityService } from 'src/air/services';
 
+import { AirQualityService } from '../../services';
 import { GetAirQualityDto } from './../../dto';
 
 @ApiTags('Air Quality')

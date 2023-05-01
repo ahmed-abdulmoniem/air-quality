@@ -33,7 +33,24 @@ export class AirQualityService {
     }
   }
 
-  @Cron('* * * * *')
+  async getDateTimesWhenParisWasMostPolluted() {
+    const maxPollutionQuery = this.cityPollutionDataPointRepository
+      .createQueryBuilder('cityPollutionDataPoints')
+      .select('MAX(cityPollutionDataPoints.pollutionIndex)')
+      .getQuery();
+
+    const maxPollutionEntities = await this.cityPollutionDataPointRepository
+      .createQueryBuilder('cityPollutionDataPoints')
+      .where(`cityPollutionDataPoints.pollutionIndex = (${maxPollutionQuery})`)
+      .getMany();
+
+    return {
+      pollutionIndex: maxPollutionEntities[0].pollutionIndex,
+      dateTimes: maxPollutionEntities.map((entity) => entity.samplingDateTime),
+    };
+  }
+
+  @Cron('01 * * * * *')
   async getParisPollutionDataPoint() {
     const parisLat = 48.856613;
     const parisLng = 2.352222;
@@ -50,22 +67,5 @@ export class AirQualityService {
       country: response?.data?.country,
       pollutionIndex: response?.data?.current?.pollution?.aqius,
     });
-  }
-
-  async getDateTimesWhenParisWasMostPolluted() {
-    const maxPollutionQuery = this.cityPollutionDataPointRepository
-      .createQueryBuilder('cityPollutionDataPoints')
-      .select('MAX(cityPollutionDataPoints.pollutionIndex)')
-      .getQuery();
-
-    const maxPollutionEntities = await this.cityPollutionDataPointRepository
-      .createQueryBuilder('cityPollutionDataPoints')
-      .where(`cityPollutionDataPoints.pollutionIndex = (${maxPollutionQuery})`)
-      .getMany();
-
-    return {
-      pollutionIndex: maxPollutionEntities[0].pollutionIndex,
-      dateTimes: maxPollutionEntities.map((entity) => entity.samplingDateTime),
-    };
   }
 }

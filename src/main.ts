@@ -13,7 +13,6 @@ async function bootstrap() {
     .setTitle('Air Quality Index')
     .setDescription('Get air quality information about different countries')
     .setVersion('1.0')
-    // .addBearerAuth({ in: 'header', type: 'http' })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
