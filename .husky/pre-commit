@@ -1,0 +1,9 @@
+#!/bin/sh
+# Copyright The Linux Foundation and each contributor to LFX.
+# SPDX-License-Identifier: MIT
+. "$(dirname "$0")/_/husky.sh"
+
+yarn test
+yarn eslint-fix
+git add .
+
