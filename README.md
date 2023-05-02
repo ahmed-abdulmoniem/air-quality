@@ -110,6 +110,10 @@ $ yarn start:dev
 $ yarn start:prod
 ```
 
+Now you can open http://localhost:4000 on your browser (if you didn't change the port on the `.env` file) to open the Swagger:
+
+<img width="1170" alt="image" src="https://user-images.githubusercontent.com/6064145/235634707-17df11f1-7cda-4f3b-951b-62ca96168ddb.png">
+
 ## Test
 
 In order to run unit tests / integration (e2e) tests / test coverage you can use the following commands:
