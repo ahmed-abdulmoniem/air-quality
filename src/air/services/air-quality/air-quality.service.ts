@@ -2,11 +2,11 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
+import { error } from 'console';
 import { Repository } from 'typeorm';
 
 import { CityPollutionDataPoint } from '../../entities';
-
-const axios = require('axios').default;
 
 @Injectable()
 export class AirQualityService {
