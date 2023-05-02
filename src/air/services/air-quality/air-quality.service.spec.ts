@@ -294,11 +294,6 @@ describe('AirQualityService', () => {
     });
 
     it('should throw exception if cityPollutionDataPointRepository failed to get data from database', async () => {
-      const expected = {
-        pollutionIndex: 10,
-        dateTimes: [new Date('2023-05-01T08:09:01.000Z')],
-      };
-
       const createQueryBuilder: any = {
         select: jest.fn().mockImplementation(() => {
           return createQueryBuilder;
