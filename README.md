@@ -2,7 +2,14 @@
 
 This repository integrates with [IQAir](https://www.iqair.com/) to read the air quality index of any area using a GPS coordinate as well as specifically providing a continuous sampling of the air quality in Paris and saving that information into a database.
 
-The repository is using the following main technologies / packages: Nodejs / Nestjs / Typescript / MySQL / TypeORM / Jest / Supertest
+The repository is using the following main technologies / packages / Tools: 
+- Nodejs
+- Nestjs
+- Typescript
+- MySQL
+- TypeORM
+- Jest
+- Supertest
 
 ## Prerequisites
 
